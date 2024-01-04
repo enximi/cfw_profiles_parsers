@@ -3,17 +3,17 @@ module.exports.parse = async (
   { axios, yaml, notify, console },
   { name, url, interval, selected }
 ) => {
-  const obj = yaml.parse(raw);
+  const profile = yaml.parse(raw);
 
   // add all nodes to openai proxy group
   {
-    const openaiProxyGroup = obj["proxy-groups"]?.find((proxy_group) =>
+    const openaiProxyGroup = profile["proxy-groups"]?.find((proxy_group) =>
       proxy_group.name.toLowerCase().includes("openai")
     );
 
     if (openaiProxyGroup) {
       const openaiProxies = new Set(openaiProxyGroup.proxies);
-      const newProxies = obj.proxies
+      const newProxies = profile.proxies
         .map((proxy) => proxy.name)
         .filter((node) => !openaiProxies.has(node));
 
@@ -25,7 +25,7 @@ module.exports.parse = async (
   {
     // copy the openai proxy group as the claude proxy group
     {
-      const openaiProxyGroup = obj["proxy-groups"]?.find((proxy_group) =>
+      const openaiProxyGroup = profile["proxy-groups"]?.find((proxy_group) =>
         proxy_group.name.toLowerCase().includes("openai")
       );
 
@@ -37,14 +37,14 @@ module.exports.parse = async (
         };
 
         // put the claude proxy group after the openai proxy group
-        const index = obj["proxy-groups"].indexOf(openaiProxyGroup);
-        obj["proxy-groups"].splice(index + 1, 0, claudeProxyGroup);
+        const index = profile["proxy-groups"].indexOf(openaiProxyGroup);
+        profile["proxy-groups"].splice(index + 1, 0, claudeProxyGroup);
       }
     }
 
     // add claude rules
     {
-      let rules = obj["rules"]; // [String, String, ...]
+      let rules = profile["rules"]; // [String, String, ...]
       let claudeRules = [
         "DOMAIN-SUFFIX,claude.ai,Claude",
         "DOMAIN-SUFFIX,anthropic.com,Claude",
@@ -58,9 +58,9 @@ module.exports.parse = async (
       } else {
         rules.push(...claudeRules);
       }
-      obj["rules"] = rules;
+      profile["rules"] = rules;
     }
   }
 
-  return yaml.stringify(obj);
+  return yaml.stringify(profile);
 };
