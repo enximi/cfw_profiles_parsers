@@ -21,5 +21,24 @@ module.exports.parse = async (
     }
   }
 
+  // copy the openai proxy group as the claude proxy group
+  {
+    const openaiProxyGroup = obj["proxy-groups"]?.find((proxy_group) =>
+      proxy_group.name.toLowerCase().includes("openai")
+    );
+
+    if (openaiProxyGroup) {
+      const claudeProxyGroup = {
+        name: "Claude",
+        type: "select",
+        proxies: openaiProxyGroup.proxies,
+      };
+
+      // put the claude proxy group after the openai proxy group
+      const index = obj["proxy-groups"].indexOf(openaiProxyGroup);
+      obj["proxy-groups"].splice(index + 1, 0, claudeProxyGroup);
+    }
+  }
+
   return yaml.stringify(obj);
 };
